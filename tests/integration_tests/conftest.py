@@ -3,23 +3,21 @@ import pytest
 from unittest.mock import mock_open, patch
 
 # Mock data for clubs.json and competitions.json
-mock_clubs_json = json.dumps(
-    {
-        "clubs": [
-            {"name": "Club 1", "email": "club1@example.com"},
-            {"name": "Club 2", "email": "club2@example.com"},
-        ]
-    }
-)
+mock_clubs_json = json.dumps({
+    "clubs": [
+        {"name": "Club 1", "email": "club1@example.com", "points": "10"},
+        {"name": "Club 2", "email": "club2@example.com", "points": "15"}
+    ]
+})
 
-mock_competitions_json = json.dumps(
-    {
-        "competitions": [
-            {"name": "Competition 1", "numberOfPlaces": "25"},
-            {"name": "Competition 2", "numberOfPlaces": "15"},
-        ]
-    }
-)
+mock_competitions_json = json.dumps({
+    "competitions": [
+        {"name": "Competition 1", "date": "2023-03-27 10:00:00",
+         "numberOfPlaces": "25"},
+        {"name": "Competition 2", "date": "2023-10-22 13:30:00",
+         "numberOfPlaces": "15"}
+    ]
+})
 
 
 def mocked_open(file, *args, **kwargs):
