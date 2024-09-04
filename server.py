@@ -62,21 +62,66 @@ def book(competition, club):
         )
 
 
+def get_competition_from_name(name):
+    try:
+        competition = [
+            competition for competition in
+            competitions if competition["name"] == name
+        ][0]
+        return competition
+    except IndexError:
+        return None
+
+
+def get_club_from_name(name):
+    try:
+        club = [
+            club for club in clubs if club["name"] == name
+        ][0]
+        return club
+    except IndexError:
+        return None
+
+
+def check_places(places, club):
+    if not places or int(places) < 1:
+        return "Places required must be a positive integer"
+    if int(places) > int(club["points"]):
+        return "Places required exceed club's total points"
+
+
+def take_places(places, club, competition):
+    try:
+        competition["numberOfPlaces"] = \
+            int(competition["numberOfPlaces"]) - places
+        club["points"] = int(club["points"]) - places
+        return True
+    except Exception:
+        return False
+
+
 @app.route("/purchasePlaces", methods=["POST"])
 def purchasePlaces():
-    competition = [
-        c for c in competitions if c["name"] == request.form["competition"]
-    ][0]
-    club = [c for c in clubs if c["name"] == request.form["club"]][0]
+    competition = get_competition_from_name(request.form["competition"])
+    club = get_club_from_name(request.form["club"])
+
+    error_message = check_places(request.form["places"], club)
+    if error_message:
+        flash(error_message)
+        return redirect(
+            url_for("book", competition=competition["name"], club=club["name"])
+        )
     placesRequired = int(request.form["places"])
-    competition["numberOfPlaces"] = (
-        int(competition["numberOfPlaces"]) - placesRequired
-    )
-    flash("Great-booking complete!")
-    return render_template("welcome.html", club=club, competitions=competitions)
 
-
-# TODO: Add route for points display
+    if take_places(placesRequired, club, competition):
+        flash("Great-booking complete!")
+        return render_template("welcome.html", club=club,
+                               competitions=competitions)
+    else:
+        flash("Something went wrong-please try again")
+        return redirect(
+            url_for("book", competition=competition["name"], club=club["name"])
+        )
 
 
 @app.route("/logout")
