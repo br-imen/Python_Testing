@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 80
+exclude = 
+    bin/activate.py,
+    lib,
+    packages,
+    migrations,
+    build,
+    dist,
+    *.pyc,
+    __pycache__,
+    bin/activate_this.py
