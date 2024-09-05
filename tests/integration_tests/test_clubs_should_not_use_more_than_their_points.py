@@ -1,4 +1,3 @@
-
 def test_purchase_places_valid(client):
     """
     Test purchasing places with valid club points and valid competition.
