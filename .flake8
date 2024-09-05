@@ -10,3 +10,4 @@ exclude =
     *.pyc,
     __pycache__,
     bin/activate_this.py
+    locustfile.py
