@@ -21,7 +21,7 @@ def test_purchase_places_insufficient_points(client):
     response = client.post("/purchasePlaces", data={
         "competition": "Competition 1",
         "club": "Club 1",
-        "places": "20"  # Club 1 has only 10 points
+        "places": "11"  # Club 1 has only 10 points
     })
 
     assert response.status_code == 302  # Redirect expected

@@ -63,7 +63,7 @@ def test_check_places_invalid_negative():
 def test_check_places_exceeds_points():
     from server import check_places
 
-    error = check_places("20", mock_clubs_list[0])
+    error = check_places("11", mock_clubs_list[0])
     assert error == "Places required exceed club's total points"
 
 
