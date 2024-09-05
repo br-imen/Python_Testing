@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash, url_for
 
 app = Flask(__name__)
@@ -29,9 +30,7 @@ def index():
 
 def get_club_from_email(email):
     try:
-        club = [
-            club for club in clubs if club["email"] == email
-        ][0]
+        club = [club for club in clubs if club["email"] == email][0]
         return club
     except IndexError:
         return None
@@ -41,33 +40,48 @@ def get_club_from_email(email):
 def showSummary():
     club = get_club_from_email(request.form["email"])
     if club:
-        return render_template("welcome.html", club=club,
-                               competitions=competitions)
+        return render_template(
+            "welcome.html", club=club, competitions=competitions
+        )
     else:
         flash("Sorry, that email wasn't found.")
         return redirect(url_for("index"))
 
 
+def validate_competition_date(competition):
+    competition_date = datetime.strptime(
+        competition["date"], "%Y-%m-%d %H:%M:%S"
+    )
+    if competition_date < datetime.now():
+        return "This competition is already over. You cannot book a place."
+
+
 @app.route("/book/<competition>/<club>")
 def book(competition, club):
-    foundClub = [c for c in clubs if c["name"] == club][0]
-    foundCompetition = [c for c in competitions if c["name"] == competition][0]
-    if foundClub and foundCompetition:
-        return render_template(
-            "booking.html", club=foundClub, competition=foundCompetition
-        )
-    else:
+    foundClub = get_club_from_name(club)
+    foundCompetition = get_competition_from_name(competition)
+    if not foundClub or not foundCompetition:
         flash("Something went wrong-please try again")
         return render_template(
             "welcome.html", club=club, competitions=competitions
         )
+    error_message = validate_competition_date(foundCompetition)
+    if error_message:
+        flash(error_message)
+        return render_template(
+            "welcome.html", club=foundClub, competitions=competitions
+        )
+    return render_template(
+        "booking.html", club=foundClub, competition=foundCompetition
+    )
 
 
 def get_competition_from_name(name):
     try:
         competition = [
-            competition for competition in
-            competitions if competition["name"] == name
+            competition
+            for competition in competitions
+            if competition["name"] == name
         ][0]
         return competition
     except IndexError:
@@ -76,9 +90,7 @@ def get_competition_from_name(name):
 
 def get_club_from_name(name):
     try:
-        club = [
-            club for club in clubs if club["name"] == name
-        ][0]
+        club = [club for club in clubs if club["name"] == name][0]
         return club
     except IndexError:
         return None
@@ -88,16 +100,19 @@ def check_places(places, club):
     if not places or int(places) < 1:
         return "Places required must be a positive integer"
     if int(places) > 12:
-        return ("Places required must be a positive integer "
-                "that does not exceed 12")
+        return (
+            "Places required must be a positive integer "
+            "that does not exceed 12"
+        )
     if int(places) > int(club["points"]):
         return "Places required exceed club's total points"
 
 
 def take_places(places, club, competition):
     try:
-        competition["numberOfPlaces"] = \
+        competition["numberOfPlaces"] = (
             int(competition["numberOfPlaces"]) - places
+        )
         club["points"] = int(club["points"]) - places
         return True
     except Exception:
@@ -119,8 +134,9 @@ def purchasePlaces():
 
     if take_places(placesRequired, club, competition):
         flash("Great-booking complete!")
-        return render_template("welcome.html", club=club,
-                               competitions=competitions)
+        return render_template(
+            "welcome.html", club=club, competitions=competitions
+        )
     else:
         flash("Something went wrong-please try again")
         return redirect(
