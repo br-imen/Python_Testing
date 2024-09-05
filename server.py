@@ -1,6 +1,10 @@
 import json
 from flask import Flask, render_template, request, redirect, flash, url_for
 
+app = Flask(__name__)
+app.secret_key = "something_special"
+app.config["COMPETITIONS_FILE"] = "competitions.json"
+
 
 def loadClubs():
     with open("clubs.json") as c:
@@ -9,13 +13,10 @@ def loadClubs():
 
 
 def loadCompetitions():
-    with open("competitions.json") as comps:
+    with open(app.config["COMPETITIONS_FILE"], "r") as comps:
         listOfCompetitions = json.load(comps)["competitions"]
         return listOfCompetitions
 
-
-app = Flask(__name__)
-app.secret_key = "something_special"
 
 competitions = loadCompetitions()
 clubs = loadClubs()
@@ -86,6 +87,9 @@ def get_club_from_name(name):
 def check_places(places, club):
     if not places or int(places) < 1:
         return "Places required must be a positive integer"
+    if int(places) > 12:
+        return ("Places required must be a positive integer "
+                "that does not exceed 12")
     if int(places) > int(club["points"]):
         return "Places required exceed club's total points"
 
@@ -127,3 +131,7 @@ def purchasePlaces():
 @app.route("/logout")
 def logout():
     return redirect(url_for("index"))
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
