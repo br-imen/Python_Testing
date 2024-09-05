@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, flash, url_for
+from flask import (Flask, render_template, request,
+                   redirect, flash, url_for, session)
 
 app = Flask(__name__)
 app.secret_key = "something_special"
@@ -37,16 +38,34 @@ def get_club_from_email(email):
         return None
 
 
-@app.route("/showSummary", methods=["POST"])
+@app.route("/showSummary", methods=["POST", "GET"])
 def showSummary():
-    club = get_club_from_email(request.form["email"])
-    if club:
-        return render_template(
-            "welcome.html", club=club, competitions=competitions
-        )
+    if request.method == "POST":
+        club = get_club_from_email(request.form["email"])
+        if club:
+            session["club_email"] = club["email"]
+            return render_template(
+                "welcome.html", club=club, competitions=competitions
+            )
+        else:
+            flash("Sorry, that email wasn't found.")
+            return redirect(url_for("index"))
     else:
-        flash("Sorry, that email wasn't found.")
-        return redirect(url_for("index"))
+        if session:
+            club = [
+                club for club in clubs if club["email"] == session["club_email"]
+            ][0]
+            return render_template(
+                "welcome.html", club=club, competitions=competitions
+            )
+        else:
+            flash("No session")
+            return redirect(url_for("index"))
+
+
+@app.route("/display-points")
+def display_points():
+    return render_template("display_points.html", clubs=clubs)
 
 
 def validate_competition_date(competition):
@@ -163,6 +182,8 @@ def purchasePlaces():
 
 @app.route("/logout")
 def logout():
+    if session:
+        session.pop("club_email", None)
     return redirect(url_for("index"))
 
 

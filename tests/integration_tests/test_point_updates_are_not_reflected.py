@@ -1,10 +1,14 @@
 import json
 
 
-def test_purchase_places_valid(client):
+def test_purchase_places_valid(client, temp_clubs_file):
     """
     Test purchasing places with valid club points and valid competition.
     """
+    with open(client.application.config['CLUB_FILE'], 'r') as f:
+        updated_clubs = json.load(f)
+        assert updated_clubs["clubs"][0]["points"] == "10"
+
     response = client.post("/purchasePlaces", data={
         "competition": "Competition 1",
         "club": "Club 1",
@@ -14,7 +18,6 @@ def test_purchase_places_valid(client):
     # Check the response and verify the club's points were updated
     assert response.status_code == 200
     assert b"Great-booking complete!" in response.data
-
     with open(client.application.config['CLUB_FILE'], 'r') as f:
         updated_clubs = json.load(f)
         assert updated_clubs["clubs"][0]["points"] == "0"
