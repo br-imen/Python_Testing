@@ -4,11 +4,12 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 
 app = Flask(__name__)
 app.secret_key = "something_special"
+app.config["CLUB_FILE"] = "clubs.json"
 app.config["COMPETITIONS_FILE"] = "competitions.json"
 
 
 def loadClubs():
-    with open("clubs.json") as c:
+    with open(app.config["CLUB_FILE"]) as c:
         listOfClubs = json.load(c)["clubs"]
         return listOfClubs
 
@@ -96,6 +97,10 @@ def get_club_from_name(name):
         return None
 
 
+def get_index_club(club):
+    return clubs.index(club)
+
+
 def check_places(places, club):
     if not places or int(places) < 1:
         return "Places required must be a positive integer"
@@ -119,11 +124,22 @@ def take_places(places, club, competition):
         return False
 
 
+def update_clubs(club, index_club):
+    try:
+        with open(app.config["CLUB_FILE"], "w") as file_club:
+            dict_clubs = {}
+            clubs[index_club]["points"] = str(club["points"])
+            dict_clubs["clubs"] = clubs
+            json.dump(dict_clubs, file_club, indent=4)
+        return True
+    except FileNotFoundError:
+        return False
+
+
 @app.route("/purchasePlaces", methods=["POST"])
 def purchasePlaces():
     competition = get_competition_from_name(request.form["competition"])
     club = get_club_from_name(request.form["club"])
-
     error_message = check_places(request.form["places"], club)
     if error_message:
         flash(error_message)
@@ -131,8 +147,9 @@ def purchasePlaces():
             url_for("book", competition=competition["name"], club=club["name"])
         )
     placesRequired = int(request.form["places"])
-
-    if take_places(placesRequired, club, competition):
+    if take_places(placesRequired, club, competition) and update_clubs(
+        club, get_index_club(club)
+    ):
         flash("Great-booking complete!")
         return render_template(
             "welcome.html", club=club, competitions=competitions
