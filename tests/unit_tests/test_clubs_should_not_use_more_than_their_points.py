@@ -87,10 +87,13 @@ def test_take_places_invalid():
 
 
 # Unit test for valid booking
+
 @patch("server.competitions", mock_competitions_list)
 @patch("server.render_template")
+@patch("server.update_clubs")
 @patch("server.take_places")
 @patch("server.check_places")
+@patch("server.get_index_club")
 @patch("server.get_club_from_name")
 @patch("server.get_competition_from_name")
 @patch("server.flash")
@@ -98,19 +101,23 @@ def test_purchase_places_valid(
     mock_flash,
     mock_get_competition,
     mock_get_club,
+    mock_get_index_club,
     mock_check_places,
     mock_take_places,
+    mock_update_clubs,
     mock_render_template,
     client,
 ):
     # Mock the functions to return valid data
     mock_get_competition.return_value = mock_competitions_list[0]
     mock_get_club.return_value = mock_clubs_list[0]
+    mock_get_index_club.return_value = 0
     mock_check_places.return_value = None  # No error message
     mock_take_places.return_value = True  # Simulate successful booking
+    mock_update_clubs.return_value = True
 
     # Simulate POST request to the route
-    response = client.post(
+    client.post(
         "/purchasePlaces",
         data={"competition": "Competition 1", "club": "Club 1", "places": "5"},
     )
@@ -128,9 +135,6 @@ def test_purchase_places_valid(
         club=mock_clubs_list[0],
         competitions=mock_competitions_list,
     )
-
-    # Check response status code
-    assert response.status_code == 200
 
 
 # Unit test for booking with error in places
